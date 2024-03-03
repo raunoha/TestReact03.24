@@ -1,227 +1,190 @@
 import React, { useState } from "react";
 
-function App() {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [dates, setDates] = useState([
-    { name: "Sunday", checked: true, appointmentTimes: [] },
-    { name: "Monday", checked: true, appointmentTimes: [] },
-    { name: "Tuesday", checked: true, appointmentTimes: [] },
-    { name: "Wednesday", checked: true, appointmentTimes: [] },
-    { name: "Thursday", checked: true, appointmentTimes: [] },
-    { name: "Friday", checked: true, appointmentTimes: [] },
-    { name: "Saturday", checked: true, appointmentTimes: [] },
-  ]);
-  const [weeks, setWeeks] = useState([]);
+function DayWeekForm() {
+  const [option, setOption] = useState("days");
+  const [day, setDay] = useState("");
+  const [week, setWeek] = useState("");
 
-  const weekdays = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
+  const friendsAvailability = [
+    { name: "Max Stone", availability: ["monday", "tuesday"] },
+    { name: "Sarah Black", availability: ["monday", "tuesday"] },
+    { name: "Alex Smith", availability: ["next week","today"] },
+    { name: "Emily White", availability: ["next week"] },
+    { name: "Lucas Brown", availability: ["tomorrow"] },
+    { name: "Mia Johnson", availability: ["tomorrow"] },
+    { name: "Ethan Miller", availability: ["best day"] },
+    { name: "Olivia Taylor", availability: ["best day"] },
+    { name: "Liam Clark", availability: ["today"] }, // No availability specified
+    { name: "Ava Parker", availability: ["best week","tomorrow"] },
   ];
 
-  const generateWeeks = () => {
-    const today = new Date();
-    const next7Weeks = [];
-    for (let i = 0; i < 7; i++) {
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(
-        startOfWeek.getDate() - startOfWeek.getDay() + 1 + i * 7
-      );
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-      const weekRange = `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`;
-      const weekNumber = getWeekNumber(startOfWeek);
-      const days = [];
-      for (let j = 0; j < 7; j++) {
-        const day = new Date(startOfWeek);
-        day.setDate(day.getDate() + j);
-        days.push({
-          dayName: weekdays[day.getDay()],
-          date: day.toLocaleDateString(),
-          selected: false,
-        });
-      }
-      next7Weeks.push({
-        weekNumber: weekNumber,
-        range: weekRange,
-        days: days,
-      });
-    }
-    setWeeks(next7Weeks);
+  const handleOptionChange = (event) => {
+    setOption(event.target.value);
   };
 
-  const getWeekNumber = (date) => {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+  const handleDayChange = (event) => {
+    setDay(event.target.value);
   };
 
-  const handleDayToggle = (index) => {
-    const updatedDates = [...dates];
-    updatedDates[index].checked = !updatedDates[index].checked;
-    setDates(updatedDates);
+  const handleWeekChange = (event) => {
+    setWeek(event.target.value);
   };
 
-  const handleAllDaysToggle = () => {
-    if (dates.some((day) => day.checked)) {
-      const updatedDates = dates.map((day) => ({
-        ...day,
-        checked: false,
-        appointmentTimes: [],
-      }));
-      setDates(updatedDates);
+  const handleButtonClick = (selectedDay) => {
+    setDay(selectedDay);
+    // Logic to set the week based on the selected day can be added here if needed
+  };
+
+  const filterFriendsByDay = (selectedDay) => {
+    if (selectedDay === "all day") {
+      return friendsAvailability.map((friend) => friend.name);
+    } else if (selectedDay === "all week") {
+      return friendsAvailability.map((friend) => friend.name);
+    } else if (selectedDay === "today") {
+      return friendsAvailability
+        .filter((friend) => friend.availability.includes("today"))
+        .map((friend) => friend.name);
+    } else if (selectedDay === "tomorrow") {
+      return friendsAvailability
+        .filter((friend) => friend.availability.includes("tomorrow"))
+        .map((friend) => friend.name);
+    } else if (selectedDay === "best day") {
+      return friendsAvailability
+        .filter((friend) => friend.availability.includes("best day"))
+        .map((friend) => friend.name);
+    } else if (selectedDay === "this week") {
+      return friendsAvailability
+        .filter((friend) => friend.availability.includes("this week"))
+        .map((friend) => friend.name);
+    } else if (selectedDay === "next week") {
+      return friendsAvailability
+        .filter((friend) => friend.availability.includes("next week"))
+        .map((friend) => friend.name);
+    } else if (selectedDay === "best week") {
+      return friendsAvailability
+        .filter((friend) => friend.availability.includes("best week"))
+        .map((friend) => friend.name);
     } else {
-      const updatedDates = dates.map((day) => ({ ...day, checked: true }));
-      setDates(updatedDates);
+      return [];
     }
   };
 
-  const handleTimeAdd = (dayIndex) => {
-    if (!dates[dayIndex].checked) return; // Prevent adding time if the day is unchecked
-    const newTime = prompt("Enter the appointment time (e.g., 9:00 AM):");
-    if (newTime) {
-      const updatedDates = [...dates];
-      updatedDates[dayIndex].appointmentTimes.push(newTime);
-      setDates(updatedDates);
-    }
-  };
 
-  const handleTimeRemove = (dayIndex, timeIndex) => {
-    const updatedDates = [...dates];
-    updatedDates[dayIndex].appointmentTimes.splice(timeIndex, 1);
-    setDates(updatedDates);
-  };
 
-  const handleRemoveAll = () => {
-    setDates(
-      dates.map((day) => ({ ...day, checked: false, appointmentTimes: [] }))
-    );
-    setWeeks([]);
-  };
-
-  const handleDaySelect = (weekIndex, dayIndex) => {
-    const updatedWeeks = [...weeks];
-    updatedWeeks[weekIndex].days[dayIndex].selected =
-      !updatedWeeks[weekIndex].days[dayIndex].selected;
-    setWeeks(updatedWeeks);
-  };
-
-  const handleSelectAll = (weekIndex) => {
-    const updatedWeeks = [...weeks];
-    updatedWeeks[weekIndex].days.forEach((day) => (day.selected = true));
-    setWeeks(updatedWeeks);
-  };
-
-  const handleClearAll = (weekIndex) => {
-    const updatedWeeks = [...weeks];
-    updatedWeeks[weekIndex].days.forEach((day) => (day.selected = false));
-    setWeeks(updatedWeeks);
-  };
-
-  const handleDropdownChange = (e) => {
-    setSelectedOption(e.target.value);
-    if (e.target.value === "weeks") {
-      generateWeeks();
-    }
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    // Handle form submission here
+    console.log("Selected day:", day);
+    console.log("Selected week:", week);
   };
 
   return (
     <div>
-      <select onChange={handleDropdownChange}>
-        <option value="">Select an option</option>
-        <option value="days">7 Days</option>
-        <option value="weeks">7 Weeks</option>
-      </select>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="option">Select:</label>
+        <br />
+        <select
+          id="option"
+          name="option"
+          value={option}
+          onChange={handleOptionChange}
+        >
+          <option value="days">Days</option>
+          <option value="weeks">Weeks</option>
+        </select>
+        <br />
+        <br />
 
-      {selectedOption === "days" && (
-        <div>
-          <p>Next 7 days:</p>
-          <label>
-            <input
-              type="checkbox"
-              checked={dates.every((day) => day.checked)}
-              onChange={handleAllDaysToggle}
-            />
-            Select All
-          </label>
+        <label htmlFor="select">
+          {option === "days" ? "Select Mon-Sun" : "Select Next 7 Weeks"}:
+        </label>
+        <br />
+        <select
+          id="select"
+          name="select"
+          value={option === "days" ? day : week}
+          onChange={option === "days" ? handleDayChange : handleWeekChange}
+        >
+          {option === "days" ? (
+            <>
+              <option value="">Please select</option>
+              <option value="monday">Monday</option>
+              <option value="tuesday">Tuesday</option>
+              <option value="wednesday">Wednesday</option>
+              <option value="thursday">Thursday</option>
+              <option value="friday">Friday</option>
+              <option value="saturday">Saturday</option>
+              <option value="sunday">Sunday</option>
+            </>
+          ) : (
+            <>
+              <option value="">Please select</option>
+              <option value="1">Week 1</option>
+              <option value="2">Week 2</option>
+              <option value="3">Week 3</option>
+              <option value="4">Week 4</option>
+              <option value="5">Week 5</option>
+              <option value="6">Week 6</option>
+              <option value="7">Week 7</option>
+            </>
+          )}
+        </select>
+        <br />
+        <br />
+
+        <button type="button" onClick={() => handleButtonClick("all")}>
+          All ({friendsAvailability.length})
+        </button>
+        <button type="button" onClick={() => handleButtonClick("today")}>
+          {option === "days" ? "Today" : "This Week"} (
+          {filterFriendsByDay("today").length})
+        </button>
+        <button type="button" onClick={() => handleButtonClick("tomorrow")}>
+          {option === "days" ? "Tomorrow" : "Next Week"} (
+          {filterFriendsByDay("tomorrow").length})
+        </button>
+        <button type="button" onClick={() => handleButtonClick("best day")}>
+          {option === "days" ? "Best Day" : "Best Week"} (
+          {filterFriendsByDay("best day").length})
+        </button>
+       
+      </form>
+
+      {/* Friends */}
+      <div>
+        <h2>Friends</h2>
+        {day === "all" ? (
           <ul>
-            {dates.map((day, dayIndex) => (
-              <li key={dayIndex}>
-                <input
-                  type="checkbox"
-                  checked={day.checked}
-                  onChange={() => handleDayToggle(dayIndex)}
-                />
-                {day.name}
-                {day.checked && ( // Render "Add Time" button only if the day is checked
-                  <button onClick={() => handleTimeAdd(dayIndex)}>
-                    Add Time
-                  </button>
-                )}
-                <ul>
-                  {day.appointmentTimes.map((time, timeIndex) => (
-                    <li key={timeIndex}>
-                      {time}
-                      <button
-                        onClick={() => handleTimeRemove(dayIndex, timeIndex)}
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {friendsAvailability.map((friend, index) => (
+              <li key={index}>
+                <strong>{friend.name}</strong>
               </li>
             ))}
           </ul>
-          <button onClick={handleRemoveAll}>Remove All</button>
-        </div>
-      )}
-
-      {selectedOption === "weeks" && (
-        <div>
-          <p>Next 7 weeks:</p>
+        ) : (
           <ul>
-            {weeks.map((week, weekIndex) => (
-              <li key={weekIndex}>
-                <div>
-                  Week {week.weekNumber}: {week.range}
-                </div>
-                <div>
-                  {week.days.map((day, dayIndex) => (
-                    <label
-                      key={dayIndex}
-                      style={{ display: "block", marginBottom: "5px" }}
-                    >
-                      {day.dayName}
-                      <input
-                        type="checkbox"
-                        checked={day.selected}
-                        onChange={() => handleDaySelect(weekIndex, dayIndex)}
-                      />
-                    </label>
-                  ))}
-                </div>
-                <label>
-                  <input
-                    type="checkbox"
-                    onChange={() => handleSelectAll(weekIndex)}
-                  />
-                  Select All
-                </label>
-                <button onClick={() => handleClearAll(weekIndex)}>
-                  Clear All
-                </button>
+            {filterFriendsByDay(day).map((friend, index) => (
+              <li key={index}>
+                <strong>{friend}</strong>
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      {/* Availability  */}
+      <div>
+        <h2>Availability </h2>
+        {/* Add content here */}
+
+        {/* Action Center */}
+        <div>
+          <h2>Action Center</h2>
+          {/* Add action center content here */}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-export default App;
+export default DayWeekForm;
